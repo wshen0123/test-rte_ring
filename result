@@ -1,0 +1,123 @@
+wshen0123@hsw-node2 test-rte_ring$ sudo ./build/test-rte_ring -c ffffc0000 -n 4 --socket-mem 0,1024 --log-level 6 -- 1
+[MASTER] Number of Producers/Consumers: 1
+[Producer 19] start
+[Consumer 20] Consumer start
+[Producer 19] Finish
+[Consumer 20] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 10.350 (s)
+Throughput: 9,661,480 (obj/s)
+
+
+wshen0123@hsw-node2 test-rte_ring$ sudo ./build/test-rte_ring -c ffffc0000 -n 4 --socket-mem 0,1024 --log-level 6 -- 2
+[MASTER] Number of Producers/Consumers: 2
+[Producer 19] start
+[Producer 20] start
+[Consumer 21] Consumer start
+[Consumer 22] Consumer start
+[Producer 19] Finish
+[Producer 20] Finish
+[Consumer 21] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 31.433 (s)
+Throughput: 3,181,333 (obj/s)
+[Consumer 22] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 31.433 (s)
+Throughput: 3,181,334 (obj/s)
+
+
+wshen0123@hsw-node2 test-rte_ring$ sudo ./build/test-rte_ring -c ffffc0000 -n 4 --socket-mem 0,1024 --log-level 6 -- 3
+[MASTER] Number of Producers/Consumers: 3
+[Producer 19] start
+[Producer 20] start
+[Producer 21] start
+[Consumer 22] Consumer start
+[Consumer 24] Consumer start
+[Consumer 23] Consumer start
+[Consumer 23] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 61.699 (s)
+Throughput: 1,620,784 (obj/s)
+[Consumer 24] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 62.008 (s)
+Throughput: 1,612,683 (obj/s)
+[Producer 21] Finish
+[Producer 19] Finish
+[Producer 20] Finish
+[Consumer 22] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 62.388 (s)
+Throughput: 1,602,860 (obj/s)
+
+
+wshen0123@hsw-node2 test-rte_ring$ sudo ./build/test-rte_ring -c ffffc0000 -n 4 --socket-mem 0,1024 --log-level 6 -- 4
+[MASTER] Number of Producers/Consumers: 4
+[Producer 19] start
+[Producer 20] start
+[Producer 21] start
+[Producer 22] start
+[Consumer 24] Consumer start
+[Consumer 23] Consumer start
+[Consumer 25] Consumer start
+[Consumer 26] Consumer start
+[Consumer 23] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 93.970 (s)
+Throughput: 1,064,165 (obj/s)
+[Consumer 24] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 94.948 (s)
+Throughput: 1,053,203 (obj/s)
+[Consumer 25] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 95.429 (s)
+Throughput: 1,047,899 (obj/s)
+[Producer 21] Finish
+[Producer 22] Finish
+[Producer 19] Finish
+[Producer 20] Finish
+[Consumer 26] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 95.464 (s)
+Throughput: 1,047,516 (obj/s)
+
+
+wshen0123@hsw-node2 test-rte_ring$ sudo ./build/test-rte_ring -c ffffc0000 -n 4 --socket-mem 0,1024 --log-level 6 -- 5
+[MASTER] Number of Producers/Consumers: 5
+[Producer 19] start
+[Producer 20] start
+[Producer 21] start
+[Producer 23] start
+[Producer 22] start
+[Consumer 26] Consumer start
+[Consumer 25] Consumer start
+[Consumer 24] Consumer start
+[Consumer 27] Consumer start
+[Consumer 28] Consumer start
+[Consumer 28] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 124.281 (s)
+Throughput: 804,628 (obj/s)
+[Consumer 27] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 124.353 (s)
+Throughput: 804,165 (obj/s)
+[Consumer 26] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 124.428 (s)
+Throughput: 803,679 (obj/s)
+[Consumer 25] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 124.438 (s)
+Throughput: 803,610 (obj/s)
+[Producer 21] Finish
+[Producer 22] Finish
+[Producer 20] Finish
+[Producer 23] Finish
+[Producer 19] Finish
+[Consumer 24] Consumer finish
+Count     : 100,000,000 (objs)
+Time      : 124.461 (s)
+Throughput: 803,463 (obj/s)
