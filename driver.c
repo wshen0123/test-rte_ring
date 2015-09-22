@@ -5,10 +5,10 @@
 
 static void driver_sp_sc()
 {
-    /* rte_ring_dequeue runs a bit faster rte_ring_enqueue
-     * so the throughput is tested at the producer side
-     */
-    int i, lcore;
+	/* rte_ring_dequeue runs a bit faster rte_ring_enqueue
+	 * so the throughput is tested at the producer side
+	 */
+	int i, lcore;
 
 	lcore = rte_get_master_lcore();
 	lcore = rte_get_next_lcore(lcore, 1, 0);
@@ -24,10 +24,9 @@ static void driver_sp_sc()
 	}
 }
 
-
 static void driver_mp_mc(int nb_producers)
 {
-    int i, lcore;
+	int i, lcore;
 	lcore = rte_get_master_lcore();
 
 	for (i = 0; i < nb_producers; i++) {
@@ -49,6 +48,6 @@ static void driver_mp_mc(int nb_producers)
 
 void driver_start_all(nb_producers)
 {
-    driver_sp_sc();
-    //driver_mp_mc(nb_producers);
+	driver_sp_sc();
+	//driver_mp_mc(nb_producers);
 }

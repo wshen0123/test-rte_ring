@@ -71,7 +71,8 @@ int app_sp_thread_bulk(void *dummy)
 	for (i = 0; i < nb_iteration; i++) {
 		/* Since we assume rte_ring_sc_dequeue is faster, we need to check if
 		 * this is true all the time, e.g. rte_panic if otherwise */
-		if (unlikely(rte_ring_sp_enqueue_bulk(ring, dummy_objs, bulk_size))) {
+		if (unlikely
+		    (rte_ring_sp_enqueue_bulk(ring, dummy_objs, bulk_size))) {
 			rte_panic("[Producer %d] Blocked @ obj #%'" PRId64 "\n",
 				  lcore, i);
 		}
@@ -95,7 +96,9 @@ int app_sc_thread_bulk(void *dummy)
 	printf("[Consumer %d] Start\n", rte_lcore_id());
 
 	for (i = 0; i < nb_iteration; i++) {
-		while (unlikely(rte_ring_sc_dequeue_bulk(ring, dummy_objs, bulk_size))) ;
+		while (unlikely
+		       (rte_ring_sc_dequeue_bulk
+			(ring, dummy_objs, bulk_size))) ;
 
 		//if (unlikely(rte_ring_sc_dequeue(ring, &dummy_obj)))
 		//    rte_panic("[Consumer %d] Consumer starved at obj #%'"PRId64"\n", rte_lcore_id(), i);
@@ -103,6 +106,7 @@ int app_sc_thread_bulk(void *dummy)
 
 	printf("[Consumer %d] Finish\n", rte_lcore_id());
 }
+
 int app_mp_thread(void *dummy)
 {
 	unsigned lcore;
@@ -116,7 +120,7 @@ int app_mp_thread(void *dummy)
 	for (i = 0; i < nb_iteration; i++) {
 		/* Since we assume rte_ring_sc_dequeue is faster, we need to check if
 		 * this is true all the time, e.g. rte_panic if otherwise */
-		while(unlikely(rte_ring_mp_enqueue(ring, dummy_obj)));
+		while (unlikely(rte_ring_mp_enqueue(ring, dummy_obj))) ;
 	}
 	printf("[Producer %d] Finish\n", lcore);
 }
@@ -137,7 +141,6 @@ int app_mc_thread(void *dummy)
 	}
 	end_cycle = rte_get_tsc_cycles();
 	time = (end_cycle - start_cycle) / (double)hz;
-
 
 	printf("[Consumer %d] Finish\n", rte_lcore_id());
 
