@@ -3,28 +3,7 @@
 
 #include "main.h"
 
-static void driver_sp_sc()
-{
-	/* rte_ring_dequeue runs a bit faster rte_ring_enqueue
-	 * so the throughput is tested at the producer side
-	 */
-	int i, lcore;
-
-	lcore = rte_get_master_lcore();
-	lcore = rte_get_next_lcore(lcore, 1, 0);
-	if (lcore < RTE_MAX_LCORE) {
-		rte_eal_remote_launch(app_sc_thread, NULL, lcore);
-	}
-
-	rte_delay_us(2);
-
-	lcore = rte_get_next_lcore(lcore, 1, 0);
-	if (lcore < RTE_MAX_LCORE) {
-		rte_eal_remote_launch(app_sp_thread, NULL, lcore);
-	}
-}
-
-static void driver_mp_mc(int nb_producers)
+void driver_mp_mc_bulk(int nb_producers, unsigned bulk_size)
 {
 	int i, lcore;
 	lcore = rte_get_master_lcore();
@@ -46,8 +25,39 @@ static void driver_mp_mc(int nb_producers)
 	}
 }
 
-void driver_start_all(nb_producers)
+void driver_sp_sc_bulk(int bulk_size)
 {
-	driver_sp_sc();
-	//driver_mp_mc(nb_producers);
+	int i, lcore;
+
+	lcore = rte_get_master_lcore();
+	lcore = rte_get_next_lcore(lcore, 1, 0);
+	if (lcore < RTE_MAX_LCORE) {
+		rte_eal_remote_launch(app_sc_bulk_thread, (void*) bulk_size, lcore);
+	}
+
+	rte_delay_us(2);
+
+	lcore = rte_get_next_lcore(lcore, 1, 0);
+	if (lcore < RTE_MAX_LCORE) {
+		rte_eal_remote_launch(app_sp_bulk_thread, (void*) bulk_size, lcore);
+	}
 }
+
+void driver_sp_sc()
+{
+	int i, lcore;
+
+	lcore = rte_get_master_lcore();
+	lcore = rte_get_next_lcore(lcore, 1, 0);
+	if (lcore < RTE_MAX_LCORE) {
+		rte_eal_remote_launch(app_sc_thread, NULL, lcore);
+	}
+
+	rte_delay_us(2);
+
+	lcore = rte_get_next_lcore(lcore, 1, 0);
+	if (lcore < RTE_MAX_LCORE) {
+		rte_eal_remote_launch(app_sp_thread, NULL, lcore);
+	}
+}
+
