@@ -19,57 +19,55 @@ unsigned bulk_size = 1;
 
 int main(int argc, char **argv)
 {
-	int c;
-	int ret;
-	int sp_sc;
-	unsigned socket_io;
+    int c;
+    int ret;
+    int sp_sc;
+    unsigned socket_io;
 
-	/* initialize EAL first */
-	ret = rte_eal_init(argc, argv);
+    /* initialize EAL first */
+    ret = rte_eal_init(argc, argv);
 
-	argc -= ret;
-	argv += ret;
+    argc -= ret;
+    argv += ret;
 
     sp_sc = 1;
     bulk_size = 1;
-	while ((c = getopt (argc, argv, "sm:b:")) != -1) {
-	    switch (c)
-	    {
-	        case 's':
-	            sp_sc = 1;
-	            break;
-            case 'm':
-                sp_sc= 0;
-                nb_producers = atoi(optarg);
-                break;
-            case 'b':
-                bulk_size = atoi(optarg);
-                break;
-            case '?':
-                break;
+    while ((c = getopt(argc, argv, "sm:b:")) != -1) {
+        switch (c) {
+        case 's':
+            sp_sc = 1;
+            break;
+        case 'm':
+            sp_sc = 0;
+            nb_producers = atoi(optarg);
+            break;
+        case 'b':
+            bulk_size = atoi(optarg);
+            break;
+        case '?':
+            break;
         }
     }
 
-	setlocale(LC_NUMERIC, "");
+    setlocale(LC_NUMERIC, "");
 
-	socket_io = rte_lcore_to_socket_id(rte_get_master_lcore());
+    socket_io = rte_lcore_to_socket_id(rte_get_master_lcore());
 
-	ring = rte_ring_create(ring_name,
-			       ring_size,
-			       socket_io, RING_F_SP_ENQ | RING_F_SC_DEQ);
+    ring = rte_ring_create(ring_name,
+                           ring_size, socket_io, RING_F_SP_ENQ | RING_F_SC_DEQ);
 
-	if (ring == NULL) {
-		rte_panic("Cannot create ring");
-	}
-
-	if (sp_sc) {
-	    printf("[MASTER] Single Producer/Consumer\n");
-	    printf("[MASTER] Bulk size: %d\n", bulk_size);
-	    driver_sp_sc();
-    } else {
-	    printf("[MASTER] Number of Producers/Consumers: %d\n", nb_producers);
-	    printf("[MASTER] Bulk size: %d\n", bulk_size);
-	    driver_mp_mc();
+    if (ring == NULL) {
+        rte_panic("Cannot create ring");
     }
-	rte_eal_mp_wait_lcore();
+
+    if (sp_sc) {
+        printf("[MASTER] Single Producer/Consumer\n");
+        printf("[MASTER] Bulk size: %d\n", bulk_size);
+        driver_sp_sc();
+    } else {
+        printf("[MASTER] Number of Producers/Consumers: %d\n", nb_producers);
+        printf("[MASTER] Bulk size: %d\n", bulk_size);
+        driver_mp_mc();
+    }
+    rte_eal_mp_wait_lcore();
 }
