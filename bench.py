@@ -27,14 +27,14 @@ def create_rotating_log(path):
  
 #----------------------------------------------------------------------
 def bench(logger):
-    proc = subprocess.Popen(['./build/app/test-rte_ring'] + args,
+    proc = subprocess.Popen(["sudo", "./build/app/test-rte_ring"] + args,
             stdout=subprocess.PIPE)
 
     proc.wait()
     output = proc.stdout.readlines()
 
     logger.info("".join(output))
-    print("\n".join(filter(lambda s:s.startswith("Throughput"), output)))
+    print("\n".join(filter(lambda s:"Throughput" in s, output)))
 
 #----------------------------------------------------------------------
 if __name__ == "__main__":

@@ -13,18 +13,16 @@ char *ring_name = "ring-0";
 const int ring_size = RING_SIZE;
 const int max_bulk_size = MAX_BULK_SIZE;
 uint64_t nb_iteration = NB_ITERATION;
-uint64_t nb_overfeed = NB_OVERFEED;
 
-uint64_t enqueue_tries = 0;
+unsigned nb_producers;
+unsigned bulk_size = 1;
 
 int main(int argc, char **argv)
 {
 	int c;
 	int ret;
 	int sp_sc;
-	int nb_producers;
 	unsigned socket_io;
-	unsigned bulk_size;
 
 	/* initialize EAL first */
 	ret = rte_eal_init(argc, argv);
@@ -33,22 +31,19 @@ int main(int argc, char **argv)
 	argv += ret;
 
     sp_sc = 1;
-    bulk_size = 0;
+    bulk_size = 1;
 	while ((c = getopt (argc, argv, "sm:b:")) != -1) {
 	    switch (c)
 	    {
 	        case 's':
 	            sp_sc = 1;
-	            printf("[MASTER] Single Producer/Consumer\n");
 	            break;
             case 'm':
                 sp_sc= 0;
                 nb_producers = atoi(optarg);
-	            printf("[MASTER] Number of Producers/Consumers: %d\n", nb_producers);
                 break;
             case 'b':
                 bulk_size = atoi(optarg);
-	            printf("[MASTER] Bulk size: %d\n", bulk_size);
                 break;
             case '?':
                 break;
@@ -68,14 +63,13 @@ int main(int argc, char **argv)
 	}
 
 	if (sp_sc) {
-	    if (bulk_size == 0) {
-	        driver_sp_sc();
-        } else {
-	        driver_sp_sc_bulk(bulk_size);
-        }
+	    printf("[MASTER] Single Producer/Consumer\n");
+	    printf("[MASTER] Bulk size: %d\n", bulk_size);
+	    driver_sp_sc();
     } else {
-        driver_mp_mc_bulk(nb_producers, bulk_size);
+	    printf("[MASTER] Number of Producers/Consumers: %d\n", nb_producers);
+	    printf("[MASTER] Bulk size: %d\n", bulk_size);
+	    driver_mp_mc();
     }
-
 	rte_eal_mp_wait_lcore();
 }
