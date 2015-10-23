@@ -16,6 +16,7 @@ uint64_t nb_iteration = NB_ITERATION;
 
 unsigned nb_producers;
 unsigned bulk_size = 1;
+unsigned work_cycles = 0;
 
 int main(int argc, char **argv)
 {
@@ -32,7 +33,7 @@ int main(int argc, char **argv)
 
     sp_sc = 1;
     bulk_size = 1;
-    while ((c = getopt(argc, argv, "sm:b:")) != -1) {
+    while ((c = getopt(argc, argv, "sm:b:w:")) != -1) {
         switch (c) {
         case 's':
             sp_sc = 1;
@@ -43,6 +44,9 @@ int main(int argc, char **argv)
             break;
         case 'b':
             bulk_size = atoi(optarg);
+            break;
+        case 'w':
+            work_cycles = atoi(optarg);
             break;
         case '?':
             break;

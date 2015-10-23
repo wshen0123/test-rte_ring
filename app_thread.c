@@ -1,16 +1,25 @@
 #include <inttypes.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <rte_cycles.h>
 #include <rte_ring.h>
 
 #include "main.h"
 
+inline void delay_cycles(uint64_t num_cycle)
+{
+    uint64_t start_cycle;
+
+    start_cycle = rte_get_tsc_cycles();
+    while(rte_get_tsc_cycles() - start_cycle < num_cycle);
+}
+
 int app_sp_thread(void *data)
 {
     unsigned lcore;
     uint64_t j;
-    void *dummy_obj;
+    void *dummy_obj[max_bulk_size];
 
     /* wrapper of parameter list */
 #if LITERAL_BULK_SIZE
@@ -19,7 +28,7 @@ int app_sp_thread(void *data)
     unsigned n = bulk_size;
 #endif
     struct rte_ring *r = ring;
-    void **obj_table = &dummy_obj;
+    void **obj_table = dummy_obj;
     uint32_t prod_head, cons_tail;
     uint32_t prod_next, free_entries;
     unsigned i;
@@ -30,7 +39,7 @@ int app_sp_thread(void *data)
     printf("[Producer %d] Start\n", lcore);
 
     for (j = 0; j < nb_iteration; j++) {
-
+        /* inlined enqueu */
         while (1) {
 
             /* begin of rte_ring.h code */
@@ -43,6 +52,7 @@ int app_sp_thread(void *data)
             }
 
             prod_next = prod_head + n;
+            //rte_atomic32_cmpset(&r->prod.head, prod_head, prod_next);
             r->prod.head = prod_next;
 
             /* write entries in ring */
@@ -53,21 +63,23 @@ int app_sp_thread(void *data)
             /* end of rte_ring.h code */
 
             break;
-        }
+        } /* end of enqueue */
     }
 
     printf("[Producer %d] Finish\n", lcore);
+
+    return 0;
 }
 
 int app_sc_thread(void *data)
 {
-    void *dummy_obj;
+    void *dummy_obj[max_bulk_size];
     uint64_t j, start_cycle, end_cycle, hz;
     double time;
 
     /* wrapper of parameter list */
     struct rte_ring *r = ring;
-    void **obj_table = &dummy_obj;
+    void **obj_table = dummy_obj;
 #if LITERAL_BULK_SIZE
     unsigned n = 1;
 #else
@@ -85,6 +97,7 @@ int app_sc_thread(void *data)
     start_cycle = rte_get_tsc_cycles();
     for (j = 0; j < nb_iteration; j++) {
 
+        /* inlined dequeue */
         while (1) {
 
             /* begin of rte_ring.h code */
@@ -97,6 +110,7 @@ int app_sc_thread(void *data)
             }
 
             cons_next = cons_head + n;
+            //rte_atomic32_cmpset(&r->cons.head, cons_head, cons_next);
             r->cons.head = cons_next;
 
             DEQUEUE_PTRS();
@@ -106,22 +120,24 @@ int app_sc_thread(void *data)
             /* end of rte_ring.h code */
 
             break;
-        }
+        } /* end of dequeue */
     }
     end_cycle = rte_get_tsc_cycles();
     time = (end_cycle - start_cycle) / (double)hz;
 
     printf("[Consumer %d] Finish\n", rte_lcore_id());
-    printf(" - Count     : %'" PRId64 " (objs)\n", nb_iteration);
-    printf(" - Time      : %.3f (s)\n", time);
-    printf(" - Throughput: %'d (obj/s)\n", (int)(nb_iteration / time));
+    printf(" - Count         : %'" PRId64 " (objs)\n", nb_iteration);
+    printf(" - Time          : %.3f (s)\n", time);
+    printf(" - Throughput    : %'d (obj/s)\n", (int)(nb_iteration * bulk_size / time));
+
+    return 0;
 }
 
 int app_mp_thread(void *data)
 {
     unsigned lcore;
     uint64_t j;
-    void *dummy_obj;
+    void *dummy_obj[max_bulk_size];
     uint64_t enqueue_tries = 0;
 
     /* vars for rte_ring.h code */
@@ -131,7 +147,7 @@ int app_mp_thread(void *data)
     unsigned n = bulk_size;
 #endif
     struct rte_ring *r = ring;
-    void **obj_table = &dummy_obj;
+    void **obj_table = dummy_obj;
     volatile uint32_t prod_head, cons_tail;
     uint32_t prod_next, free_entries;
     int success;
@@ -143,12 +159,15 @@ int app_mp_thread(void *data)
     printf("[Producer %d] Start\n", lcore);
 
     for (j = 0; j < nb_iteration; j++) {
+        /* do some work with object */
+        delay_cycles(work_cycles * bulk_size);
+
+        /* inlined enqueue */
         while (1) {
 
- retry:
             /* begin of rte_ring.h code */
             do {
-                enqueue_tries++;
+retry:
                 prod_head = r->prod.head;
                 cons_tail = r->cons.tail;
                 free_entries = (mask + cons_tail - prod_head);
@@ -157,6 +176,7 @@ int app_mp_thread(void *data)
                     goto retry;
                 }
 
+                enqueue_tries++;
                 prod_next = prod_head + n;
                 success =
                     rte_atomic32_cmpset(&r->prod.head, prod_head, prod_next);
@@ -178,22 +198,24 @@ int app_mp_thread(void *data)
             /* end of rte_ring.h code */
 
             break;
-        }
+        } /* end of enqueue */
     }
     printf("[Producer %d] Finish\n", lcore);
-    printf(" - CAS Tries  : %'" PRId64 "\n", enqueue_tries);
+    printf(" - EnQ CAS Tries : %'" PRId64 "\n", enqueue_tries);
+
+    return 0;
 }
 
 int app_mc_thread(void *data)
 {
     uint64_t j, start_cycle, end_cycle, hz;
     double time;
-    void *dummy_obj;
+    void *dummy_obj[max_bulk_size];
     uint64_t dequeue_tries = 0;
 
     /* vars for rte_ring.h code */
     struct rte_ring *r = ring;
-    void **obj_table = &dummy_obj;
+    void **obj_table = dummy_obj;
 #if LITERAL_BULK_SIZE
     unsigned n = 1;
 #else
@@ -213,12 +235,13 @@ int app_mc_thread(void *data)
     hz = rte_get_tsc_hz();
     start_cycle = rte_get_tsc_cycles();
     for (j = 0; j < nb_iteration; j++) {
+
+        /* inlined dequeue */
         while (1) {
 
- retry:
             /* begin of rte_ring.h code */
             do {
-                dequeue_tries++;
+retry:
                 cons_head = r->cons.head;
                 prod_tail = r->prod.tail;
                 entries = (prod_tail - cons_head);
@@ -227,6 +250,7 @@ int app_mc_thread(void *data)
                     goto retry;
                 }
 
+                dequeue_tries++;
                 cons_next = cons_head + n;
                 success =
                     rte_atomic32_cmpset(&r->cons.head, cons_head, cons_next);
@@ -247,14 +271,19 @@ int app_mc_thread(void *data)
             /* end of rte_ring.h code */
 
             break;
-        }
+        } /* end of dequeu */
+
+        /* do some work with the dequeued object */
+        delay_cycles(work_cycles * bulk_size);
     }
     end_cycle = rte_get_tsc_cycles();
     time = (end_cycle - start_cycle) / (double)hz;
 
     printf("[Consumer %d] Finish\n", rte_lcore_id());
-    printf(" - Count     : %'" PRId64 " (objs)\n", nb_iteration);
-    printf(" - Time      : %.3f (s)\n", time);
-    printf(" - CAS Tries : %'" PRId64 "\n", dequeue_tries);
-    printf(" - Throughput: %'d (obj/s)\n", (int)(nb_iteration / time));
+    printf(" - Count         : %'" PRId64 " (objs)\n", nb_iteration);
+    printf(" - Time          : %.3f (s)\n", time);
+    printf(" - DeQ CAS Tries : %'" PRId64 "\n", dequeue_tries);
+    printf(" - Throughput    : %'d (obj/s)\n", (int)(nb_iteration * bulk_size/ time));
+
+    return 0;
 }
